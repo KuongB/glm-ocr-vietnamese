@@ -1,0 +1,123 @@
+.image-uploader {
+  width: 100%;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--bg-secondary);
+  min-height: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone:hover:not(.disabled) {
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
+}
+
+.dropzone.active {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.dropzone.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.upload-placeholder svg {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  opacity: 0.6;
+}
+
+.upload-placeholder h3 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.upload-placeholder p {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.upload-button {
+  background: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+
+.upload-button:hover {
+  background: var(--primary-dark);
+}
+
+.file-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+}
+
+.image-preview {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: block;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+}
+
+.dropzone:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-overlay p {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}

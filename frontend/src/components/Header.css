@@ -1,0 +1,42 @@
+.header {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1.5rem 0;
+  color: white;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.logo h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tagline {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin: 0;
+  font-weight: 300;
+}
+
+@media (max-width: 768px) {
+  .logo h1 {
+    font-size: 1.5rem;
+  }
+  
+  .tagline {
+    font-size: 0.9rem;
+  }
+}
