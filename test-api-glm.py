@@ -1,7 +1,7 @@
 import requests, base64
 
 # Đổi thành ảnh test của bạn
-with open("test_image.jpg", "rb") as f:
+with open("giotsuatraoem.png", "rb") as f:
     b64 = base64.b64encode(f.read()).decode()
 
 response = requests.post(
