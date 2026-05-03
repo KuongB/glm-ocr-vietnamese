@@ -6,13 +6,13 @@ image = (
         "torch", "torchvision", "transformers", "peft",
         "Pillow", "accelerate", "einops",
         "sentencepiece", "huggingface_hub",
-        "fastapi[standard]"        # ← thêm dòng này
+        "fastapi[standard]"       
     ])
 )
 
 app = modal.App("glm-ocr-api", image=image)
 
-HF_REPO_ID = "KuongB/glm-ocr-vietnamese"  # ← thay bằng repo của bạn
+HF_REPO_ID = "KuongB/glm-ocr-vietnamese"
 
 @app.cls(gpu="T4", secrets=[modal.Secret.from_name("huggingface-token")])
 class GLMOCRModel:
