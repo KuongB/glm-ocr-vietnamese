@@ -78,11 +78,12 @@ class GLMOCRModel:
             generated, skip_special_tokens=True
         ).strip()
 
+model_instance = GLMOCRModel()
 
 @app.function()
 @modal.fastapi_endpoint(method="POST")
 def ocr_endpoint(item: dict) -> dict:
     import base64
     image_bytes = base64.b64decode(item["image_b64"])
-    result = GLMOCRModel().predict.remote(image_bytes)
+    result = model_instance.predict.remote(image_bytes) 
     return {"text": result}
