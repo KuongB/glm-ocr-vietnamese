@@ -70,21 +70,6 @@ function ResultDisplay({ result }) {
             {result?.processing_time != null ? `${result.processing_time.toFixed(2)}s` : 'N/A'}
           </span>
         </div>
-        
-        {result?.confidence != null && (
-          <div className="meta-item confidence-item">
-            <span className="meta-label">Độ tin cậy</span>
-            <div className="confidence-wrapper">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
-                  style={{ width: `${result.confidence * 100}%` }}
-                ></div>
-              </div>
-              <span className="meta-value">{(result.confidence * 100).toFixed(1)}%</span>
-            </div>
-          </div>
-        )}
 
         <div className="meta-item">
           <span className="meta-label">Số ký tự</span>

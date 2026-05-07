@@ -117,7 +117,16 @@
   font-size: 0.9rem;
 }
 
-/* --- THEME TOGGLE BUTTON --- */
+.corner-logo {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+  z-index: 10;
+}
+
 .theme-toggle-btn {
   position: absolute;
   top: 1.5rem;

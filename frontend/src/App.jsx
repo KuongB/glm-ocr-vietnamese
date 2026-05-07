@@ -5,7 +5,10 @@ import ImageUploader from './components/ImageUploader'
 import ResultDisplay from './components/ResultDisplay'
 import LoadingSpinner from './components/LoadingSpinner'
 import ErrorMessage from './components/ErrorMessage'
+import ImageEditor from './components/ImageEditor'
+import HistorySidebar from './components/HistorySidebar'  
 import { extractText } from './services/api'
+import logo from './assets/logo_ocr.png'
 
 function App() {
   const [image, setImage] = useState(null)
@@ -13,28 +16,54 @@ function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [theme, setTheme] = useState('light') // Theme state
+  const [theme, setTheme] = useState('light')
+  
+  const [showEditor, setShowEditor] = useState(false)
+  const [rawImageSrc, setRawImageSrc] = useState(null)
+  
+  const [history, setHistory] = useState(() => {
+    const saved = localStorage.getItem('ocr_history')
+    return saved ? JSON.parse(saved) : []
+  })
 
   // Apply theme to document root
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
+  // Local storage persistence for history
+  useEffect(() => {
+    localStorage.setItem('ocr_history', JSON.stringify(history))
+  }, [history])
+
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'))
   }
 
   const handleImageSelect = async (file) => {
-    setImage(file)
-    setError(null)
-    setResult(null)
-
-    // Create preview
     const reader = new FileReader()
     reader.onloadend = () => {
-      setImagePreview(reader.result)
+      setRawImageSrc(reader.result)
+      setShowEditor(true)
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleSaveEditedImage = (editedFile, previewUrl) => {
+    setImage(editedFile)
+    setImagePreview(previewUrl)
+    setShowEditor(false)
+    setError(null)
+    setResult(null)
+  }
+
+  const handleCancelEditor = () => {
+    setShowEditor(false)
+    setRawImageSrc(null)
+    if (!image) {
+      setImage(null)
+      setImagePreview(null)
+    }
   }
 
   const handleExtractText = async () => {
@@ -49,13 +78,20 @@ function App() {
     try {
       const result = await extractText(image)
       setResult(result)
+
+      if (result.text && result.text.trim().length > 0) {
+        setHistory(prev => [
+          {
+            id: Date.now(),
+            text: result.text,
+            timestamp: Date.now(),
+            processing_time: result.processing_time || 'N/A'
+          },
+          ...prev
+        ])
+      }
     } catch (err) {
-      //setError(err.message || 'Có lỗi xảy ra khi xử lý ảnh')
-      setResult({ 
-        text: `Mock result`,
-        processing_time: 2, // Mock data để UI không bị vỡ
-        confidence: 0.8       // Mock data
-      })
+      setError(err.message || 'Có lỗi xảy ra khi xử lý ảnh')
     } finally {
       setLoading(false)
     }
@@ -68,9 +104,15 @@ function App() {
     setError(null)
   }
 
+  const handleClearHistory = () => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử?')) {
+      setHistory([])
+    }
+  }
+
   return (
     <div className="app">
-      {/* Theme toggle button - Top right corner */}
+      <img src={logo} alt="OCR Logo" className="corner-logo" />
       <button 
         className="theme-toggle-btn" 
         onClick={toggleTheme}
@@ -84,7 +126,6 @@ function App() {
       <main className="main-content">
         <div className="container">
           <div className="content-grid">
-            {/* Left side: Upload section */}
             <div className="upload-section">
               <ImageUploader 
                 onImageSelect={handleImageSelect}
@@ -115,7 +156,6 @@ function App() {
               </div>
             </div>
 
-            {/* Right side: Result section */}
             <div className="result-section">
               {loading && <LoadingSpinner />}
               
@@ -144,8 +184,21 @@ function App() {
               )}
             </div>
           </div>
+
+          <HistorySidebar 
+            history={history}
+            onClear={handleClearHistory}
+          />
         </div>
       </main>
+
+      {showEditor && rawImageSrc && (
+        <ImageEditor 
+          imageSrc={rawImageSrc}
+          onSave={handleSaveEditedImage}
+          onCancel={handleCancelEditor}
+        />
+      )}
 
       <footer className="footer">
         <div className="container">
