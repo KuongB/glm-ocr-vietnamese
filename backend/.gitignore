@@ -26,9 +26,3 @@ dist/
 .coverage
 htmlcov/
 
-# Models (if storing locally)
-models/
-checkpoints/
-*.pt
-*.pth
-*.bin
