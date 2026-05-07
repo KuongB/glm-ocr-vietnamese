@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
 import './ResultDisplay.css'
-import { Copy, Check, Download } from 'lucide-react'
+import { Copy, Check, Download, FileX } from 'lucide-react'
 
 function ResultDisplay({ result }) {
   const [copied, setCopied] = useState(false)
 
+  const hasText = result?.text && result.text.trim().length > 0
+
   const handleCopy = async () => {
+    if (!hasText) return
     try {
       await navigator.clipboard.writeText(result.text)
       setCopied(true)
@@ -16,6 +19,7 @@ function ResultDisplay({ result }) {
   }
 
   const handleDownload = () => {
+    if (!hasText) return
     const blob = new Blob([result.text], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -31,53 +35,64 @@ function ResultDisplay({ result }) {
     <div className="result-display">
       <div className="result-header">
         <h2 className="section-title">Kết quả</h2>
-        <div className="result-actions">
-          <button
-            className="icon-button"
-            onClick={handleCopy}
-            title="Sao chép"
-          >
-            {copied ? <Check size={20} /> : <Copy size={20} />}
-          </button>
-          <button
-            className="icon-button"
-            onClick={handleDownload}
-            title="Tải xuống"
-          >
-            <Download size={20} />
-          </button>
-        </div>
       </div>
 
-      <div className="result-content">
-        <div className="result-text">
-          {result.text || 'Không có văn bản nào được phát hiện'}
+      <div className="result-container">
+        <div className="result-content">
+          {hasText ? (
+            <div className="result-text">{result.text}</div>
+          ) : (
+            <div className="empty-text-state">
+              <FileX size={48} className="empty-text-icon" />
+              <p>Không tìm thấy văn bản nào trong ảnh này</p>
+            </div>
+          )}
         </div>
+
+        {hasText && (
+          <div className="floating-actions">
+            <button className="action-pill" onClick={handleCopy}>
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              <span>{copied ? 'Đã chép' : 'Sao chép'}</span>
+            </button>
+            <button className="action-pill" onClick={handleDownload}>
+              <Download size={16} />
+              <span>Xuất file</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="result-meta">
         <div className="meta-item">
-          <span className="meta-label">Thời gian xử lý:</span>
-          <span className="meta-value">{result.processing_time?.toFixed(2)}s</span>
+          <span className="meta-label">Thời gian xử lý</span>
+          <span className="meta-value">
+            {result?.processing_time != null ? `${result.processing_time.toFixed(2)}s` : 'N/A'}
+          </span>
         </div>
-        {result.confidence && (
-          <div className="meta-item">
-            <span className="meta-label">Độ tin cậy:</span>
-            <span className="meta-value">{(result.confidence * 100).toFixed(1)}%</span>
+        
+        {result?.confidence != null && (
+          <div className="meta-item confidence-item">
+            <span className="meta-label">Độ tin cậy</span>
+            <div className="confidence-wrapper">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${result.confidence * 100}%` }}
+                ></div>
+              </div>
+              <span className="meta-value">{(result.confidence * 100).toFixed(1)}%</span>
+            </div>
           </div>
         )}
+
         <div className="meta-item">
-          <span className="meta-label">Số ký tự:</span>
-          <span className="meta-value">{result.text?.length || 0}</span>
+          <span className="meta-label">Số ký tự</span>
+          <span className="meta-value">
+            {hasText ? result.text.length : 'N/A'}
+          </span>
         </div>
       </div>
-
-      {copied && (
-        <div className="toast">
-          <Check size={16} />
-          <span>Đã sao chép vào clipboard</span>
-        </div>
-      )}
     </div>
   )
 }
