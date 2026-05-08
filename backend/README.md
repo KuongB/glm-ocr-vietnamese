@@ -18,10 +18,8 @@ Professional FastAPI backend for OCR text extraction service using Modal API.
 This backend acts as a proxy service that:
 1. Receives images from frontend
 2. Validates and processes images
-3. Sends images to Modal API (serverless GPU)
+3. Sends images to Modal API (serverless GPU/inference server)
 4. Returns extracted text to frontend
-
-**No local ML dependencies required** - all inference happens on Modal.
 
 ## Project Structure
 
@@ -52,27 +50,36 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### 2. Install dependencies
+or
 
 ```bash
-pip install -r requirements.txt
+conda create -n ml-ocr-env
+conda activate ml-ocr-env
 ```
+
+
+### 2. Install dependencies
+
+Note: cd backend folder and run this command:
+
+```bash
+pip install -r requirements.txt 
+```
+
 
 ### 3. Configure environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your Modal API URL
+# Edit .env with Modal API URL
 ```
 
 **Important**: You must set `MODAL_API_URL` in `.env` file.
 
 Get your Modal API URL by deploying the model:
 ```bash
-modal deploy serve.py
+modal serve serve.py
 ```
-
-See [../MODAL_DEPLOYMENT.md](../MODAL_DEPLOYMENT.md) for deployment instructions.
 
 ### 4. Run the server
 

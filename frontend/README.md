@@ -1,8 +1,5 @@
 # OCR Service - Frontend
 
-Modern React frontend for OCR text extraction service with beautiful UI/UX.
-
-
 ## Tech Stack
 
 - **React 18** - UI framework
@@ -86,15 +83,5 @@ The app will be available at http://localhost:3000
 - WebP
 
 Maximum file size: 10MB
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file:
-
-```env
-VITE_API_URL=http://localhost:8000/api
-```
 
 

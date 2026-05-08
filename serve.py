@@ -14,7 +14,7 @@ app = modal.App("glm-ocr-api", image=image)
 
 HF_REPO_ID = "KuongB/glm-ocr-vietnamese"
 
-@app.cls(gpu="T4", secrets=[modal.Secret.from_name("huggingface-token")])
+@app.cls(gpu="H100", secrets=[modal.Secret.from_name("huggingface-token")])
 class GLMOCRModel:
 
     @modal.enter()
