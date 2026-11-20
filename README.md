@@ -483,6 +483,12 @@ IntroML-OCR/
 │   ├── EDA.ipynb                # Exploratory Data Analysis
 │   └── Preprocessing.ipynb      # Data preprocessing pipeline
 │
+├── annotation_pipeline/         # Dataset annotation pipeline (OCR → SLM → review)
+│   ├── run_pipeline.py          # CLI: scan / ocr / correct / review / export
+│   ├── serve_corrector.py       # Modal deployment for the correction SLM
+│   ├── pipeline/                # Stages, record store, HTTP clients, review server
+│   └── tests/
+│
 ├── data_sample/                 # Sample images with ground-truth labels
 │   └── 1/
 │       ├── 1.jpg ... 10.jpg     # Sample OCR test images
@@ -516,6 +522,34 @@ Drive layout.
 `data_sample/1/` holds 10 sample images with ground-truth text in `label.json`,
 in the same format the notebooks produce — useful for a quick end-to-end check
 without mounting Drive.
+
+### Annotation Pipeline
+
+[`annotation_pipeline/`](annotation_pipeline/) is the tooling used to *build*
+that training data, rather than to analyse it. It turns a folder of raw
+handwriting images into reviewed image–text pairs in three stages:
+
+1. **Semi-automatic OCR** — each image is transcribed by the GLM-OCR endpoint
+   into a draft, so annotation becomes correction rather than transcription.
+2. **SLM correction** — the drafts are sent to a hosted
+   [`nrl-ai/vn-spell-correction-small`](https://huggingface.co/nrl-ai/vn-spell-correction-small)
+   endpoint (BARTpho-based), which restores diacritics and fixes spelling.
+3. **Manual review** — a local web UI shows the image beside the draft and the
+   corrected text; nothing reaches the exported dataset until a human approves it.
+
+State lives in a JSONL manifest keyed by image, so every stage is resumable and
+failures are retried on the next run instead of aborting the batch. The package
+talks only HTTP to both models and has no ML dependencies.
+
+```bash
+cd annotation_pipeline
+python run_pipeline.py auto      # scan + OCR + correction
+python run_pipeline.py review    # human review at http://127.0.0.1:8100
+python run_pipeline.py export    # dataset.jsonl + label.json
+```
+
+See [annotation_pipeline/README.md](annotation_pipeline/README.md) for setup,
+the endpoint contract, and configuration.
 
 ---
 

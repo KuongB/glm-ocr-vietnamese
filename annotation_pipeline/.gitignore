@@ -1,0 +1,14 @@
+# Working data: images, manifest and exports are never committed,
+# but the directory layout is kept so a fresh clone can run straight away.
+data/*
+!data/.gitkeep
+!data/images/
+data/images/*
+!data/images/.gitkeep
+
+# Local config
+.env
+
+__pycache__/
+*.py[cod]
+.pytest_cache/

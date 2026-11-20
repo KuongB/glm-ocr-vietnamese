@@ -1,0 +1,21 @@
+# The pipeline only talks HTTP to the two model endpoints, so there are no
+# torch/transformers dependencies here. Those live in serve_corrector.py,
+# which runs on Modal.
+
+# HTTP client (stages 1 and 2)
+httpx==0.26.0
+
+# Config and record schema
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Review server (stage 3)
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Deploying serve_corrector.py
+modal==0.64.86
+
+# Tests
+pytest==7.4.4
+pytest-asyncio==0.23.3

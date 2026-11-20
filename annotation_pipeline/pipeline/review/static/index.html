@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Annotation review</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #16233c;
+    --panel-2: #1d2d4a;
+    --line: #2b3b5c;
+    --text: #e6edf7;
+    --muted: #93a4c2;
+    --accent: #38bdf8;
+    --ok: #34d399;
+    --bad: #f87171;
+    --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  header h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .02em; }
+  .counts { margin-left: auto; display: flex; gap: 14px; font-size: 13px; color: var(--muted); }
+  .counts b { color: var(--text); font-variant-numeric: tabular-nums; }
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    padding: 16px 20px 80px;
+    align-items: start;
+  }
+  @media (max-width: 980px) { main { grid-template-columns: minmax(0, 1fr); } }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .card h2 {
+    margin: 0; padding: 10px 14px;
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+  .card .body { padding: 14px; }
+  #imgwrap {
+    display: flex; align-items: center; justify-content: center;
+    background: #fff; min-height: 220px; padding: 10px;
+  }
+  #img { max-width: 100%; max-height: 62vh; object-fit: contain; }
+  pre.text {
+    margin: 0; padding: 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    white-space: pre-wrap; word-break: break-word;
+    font: 14px/1.6 ui-monospace, "Cascadia Code", Consolas, monospace;
+    max-height: 22vh; overflow: auto;
+  }
+  pre.text.muted { color: var(--muted); }
+  label.lbl {
+    display: block; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 0 0 6px;
+  }
+  .stack > * + * { margin-top: 14px; }
+  textarea {
+    width: 100%; min-height: 150px; resize: vertical;
+    padding: 12px;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px;
+    font: 15px/1.6 ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type=text] {
+    width: 100%; padding: 9px 12px;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600;
+    padding: 10px 16px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.ok { background: var(--ok); border-color: var(--ok); color: #05281c; }
+  button.bad { background: var(--bad); border-color: var(--bad); color: #330d0d; }
+  kbd {
+    font: 11px ui-monospace, monospace; padding: 1px 5px;
+    border: 1px solid currentColor; border-radius: 4px; opacity: .75;
+  }
+  .meta { font-size: 12px; color: var(--muted); }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--muted);
+  }
+  .pill.changed { color: var(--warn); border-color: var(--warn); }
+  .pill.same { color: var(--muted); }
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    padding: 10px 18px; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--line);
+    font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .18s;
+  }
+  #toast.show { opacity: 1; }
+  #toast.err { border-color: var(--bad); color: var(--bad); }
+  #empty { padding: 48px 20px; text-align: center; color: var(--muted); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Annotation review</h1>
+  <span class="pill" id="status">-</span>
+  <span class="pill" id="changed"></span>
+  <div class="counts">
+    <span>approved <b id="c-approved">0</b></span>
+    <span>rejected <b id="c-rejected">0</b></span>
+    <span>remaining <b id="c-remaining">0</b></span>
+  </div>
+</header>
+
+<div id="empty" class="hidden">
+  <p>Nothing left to review.</p>
+  <p class="meta">Run stage 1 and 2 to queue more records, then reload.</p>
+</div>
+
+<main id="workspace">
+  <section class="card">
+    <h2>Image</h2>
+    <div id="imgwrap"><img id="img" alt="record image" /></div>
+    <div class="body meta" id="imgmeta"></div>
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>OCR draft</h2>
+      <div class="body"><pre class="text muted" id="draft"></pre></div>
+    </section>
+
+    <section class="card">
+      <h2>SLM corrected</h2>
+      <div class="body"><pre class="text" id="corrected"></pre></div>
+    </section>
+
+    <section class="card">
+      <h2>Final text</h2>
+      <div class="body stack">
+        <div>
+          <label class="lbl" for="final">Edit then approve</label>
+          <textarea id="final" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <label class="lbl" for="note">Note (optional)</label>
+          <input type="text" id="note" placeholder="e.g. illegible, wrong crop" />
+        </div>
+        <div class="row">
+          <button class="ok" id="approve">Approve <kbd>Ctrl+Enter</kbd></button>
+          <button class="bad" id="reject">Reject <kbd>Ctrl+Del</kbd></button>
+          <button id="skip">Skip <kbd>Ctrl+&rarr;</kbd></button>
+          <button id="reset">Reset text</button>
+        </div>
+        <p class="meta">
+          Approve saves the box above as the final annotation. Reject marks the
+          image unusable and keeps your note.
+        </p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let current = null;
+let busy = false;
+
+function toast(message, isError) {
+  const el = $('toast');
+  el.textContent = message;
+  el.className = isError ? 'show err' : 'show';
+  setTimeout(() => { el.className = ''; }, 2200);
+}
+
+async function api(path, options) {
+  const response = await fetch(path, options);
+  if (!response.ok) {
+    let detail = response.statusText;
+    try { detail = (await response.json()).detail || detail; } catch (_) {}
+    throw new Error(detail);
+  }
+  return response.json();
+}
+
+function render(record) {
+  current = record;
+  if (!record) {
+    $('workspace').classList.add('hidden');
+    $('empty').classList.remove('hidden');
+    $('status').textContent = 'done';
+    $('changed').textContent = '';
+    return;
+  }
+  $('empty').classList.add('hidden');
+  $('workspace').classList.remove('hidden');
+
+  $('img').src = record.image_url + '?v=' + encodeURIComponent(record.id);
+  $('img').alt = record.image;
+  $('imgmeta').textContent = record.image + (record.exists ? '' : '  (file missing on disk)');
+  $('draft').textContent = record.draft_text || '(no draft)';
+  $('corrected').textContent = record.corrected_text || '(not corrected yet)';
+  $('final').value = record.review_text || '';
+  $('note').value = record.note || '';
+  $('status').textContent = record.status;
+
+  const pill = $('changed');
+  if (record.corrected_text == null) {
+    pill.textContent = '';
+    pill.className = 'pill';
+  } else if (record.was_corrected) {
+    pill.textContent = 'SLM changed the draft';
+    pill.className = 'pill changed';
+  } else {
+    pill.textContent = 'SLM left it unchanged';
+    pill.className = 'pill same';
+  }
+  $('final').focus();
+}
+
+async function refreshStats() {
+  try {
+    const stats = await api('/api/stats');
+    $('c-approved').textContent = stats.by_status.approved || 0;
+    $('c-rejected').textContent = stats.by_status.rejected || 0;
+    $('c-remaining').textContent = stats.remaining || 0;
+  } catch (err) {
+    // Counters are cosmetic; a failure here must not block reviewing.
+  }
+}
+
+async function loadNext(afterId) {
+  const query = afterId ? '?after=' + encodeURIComponent(afterId) : '';
+  const data = await api('/api/next' + query);
+  render(data.record);
+}
+
+function setBusy(value) {
+  busy = value;
+  ['approve', 'reject', 'skip'].forEach((id) => { $(id).disabled = value; });
+}
+
+async function decide(status) {
+  if (!current || busy) return;
+  const text = $('final').value;
+  if (status === 'approved' && !text.trim()) {
+    toast('Final text is empty - reject it instead', true);
+    return;
+  }
+  setBusy(true);
+  const decidedId = current.id;
+  try {
+    const data = await api('/api/review/' + decidedId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: status,
+        final_text: text,
+        note: $('note').value || null,
+      }),
+    });
+    toast(status === 'approved' ? 'Approved' : 'Rejected');
+    render(data.next);
+    if (!data.next) await loadNext();
+    refreshStats();
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    setBusy(false);
+  }
+}
+
+$('approve').onclick = () => decide('approved');
+$('reject').onclick = () => decide('rejected');
+$('skip').onclick = async () => {
+  if (!current || busy) return;
+  setBusy(true);
+  try { await loadNext(current.id); } catch (err) { toast(err.message, true); }
+  finally { setBusy(false); }
+};
+$('reset').onclick = () => {
+  if (current) $('final').value = current.corrected_text || current.draft_text || '';
+};
+
+document.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey)) return;
+  if (event.key === 'Enter') { event.preventDefault(); decide('approved'); }
+  else if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); decide('rejected'); }
+  else if (event.key === 'ArrowRight') { event.preventDefault(); $('skip').click(); }
+});
+
+(async function start() {
+  try {
+    await loadNext();
+    await refreshStats();
+  } catch (err) {
+    toast('Could not load records: ' + err.message, true);
+  }
+})();
+</script>
+</body>
+</html>
