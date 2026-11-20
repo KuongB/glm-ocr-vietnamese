@@ -12,21 +12,26 @@
 
 ```
 frontend/
-├── public/              # Static assets
 ├── src/
 │   ├── components/      # React components
 │   │   ├── Header.jsx
 │   │   ├── ImageUploader.jsx
+│   │   ├── ImageEditor.jsx
 │   │   ├── ResultDisplay.jsx
+│   │   ├── HistorySidebar.jsx
 │   │   ├── LoadingSpinner.jsx
 │   │   └── ErrorMessage.jsx
 │   ├── services/        # API services
 │   │   └── api.js
+│   ├── assets/          # Static assets
+│   │   └── logo_ocr.png
 │   ├── App.jsx          # Main app component
 │   ├── App.css
 │   ├── main.jsx         # Entry point
 │   └── index.css        # Global styles
 ├── index.html
+├── nginx.conf           # Nginx config (production image)
+├── Dockerfile
 ├── package.json
 └── vite.config.js
 ```
@@ -70,9 +75,11 @@ The app will be available at http://localhost:3000
 ## Usage
 
 1. **Upload Image**: Drag & drop an image or click to select from your computer
-2. **Extract Text**: Click "Trích xuất văn bản" button
-3. **View Results**: See extracted text with processing time and metadata
-4. **Copy/Download**: Use the copy or download buttons to save results
+2. **Edit (optional)**: Crop or rotate the image before extraction
+3. **Extract Text**: Click the "Trích xuất văn bản" (Extract text) button
+4. **View Results**: See extracted text with processing time and metadata
+5. **Copy/Download**: Use the copy or download buttons to save results
+6. **History**: Past extractions are kept in `localStorage` and listed in the sidebar
 
 ## Supported Image Formats
 

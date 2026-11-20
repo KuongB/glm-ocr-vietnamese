@@ -68,7 +68,7 @@ A full-stack OCR (Optical Character Recognition) web application specialized in 
                                               │
                                               ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│                Modal Serverless GPU (T4)                          │
+│                Modal Serverless GPU (H100)                        │
 │                                                                   │
 │  ┌──────────────────────────────────────────────────────────────┐ │
 │  │  serve.py — GLMOCRModel                                      │ │
@@ -79,7 +79,7 @@ A full-stack OCR (Optical Character Recognition) web application specialized in 
 │  └──────────────────────────────────────────────────────────────┘ │
 │                                                                   │
 │  Model: KuongB/glm-ocr-vietnamese (HuggingFace)                  │
-│  GPU: NVIDIA T4 · torch.bfloat16 · device_map="auto"            │
+│  GPU: NVIDIA H100 · torch.bfloat16 · device_map="auto"          │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,7 +140,7 @@ sequenceDiagram
     U->>FE: Upload image (drag-drop / file picker)
     FE->>FE: Open ImageEditor (crop / rotate)
     U->>FE: Confirm edits → canvas.toBlob()
-    U->>FE: Click "Trích xuất văn bản"
+    U->>FE: Click "Trích xuất văn bản" (Extract text)
     FE->>FE: FileReader → base64 encode
     FE->>BE: POST /api/ocr/extract { image_b64 }
     BE->>BE: Validate image (format, size, Pillow verify)
@@ -361,9 +361,16 @@ Open `http://localhost:3000` in your browser.
 
 ### Quick Start
 
+The backend container requires `MODAL_API_URL`. Provide it through a root `.env`
+file before starting the stack:
+
 ```bash
 # From project root
-docker-compose up --build
+cp .env.example .env     # Linux/macOS
+copy .env.example .env   # Windows
+# then edit .env and set MODAL_API_URL
+
+docker compose up --build
 ```
 
 | Service | URL | Container Port |
@@ -414,8 +421,8 @@ networks:
 | `CORS_ORIGINS` | `http://localhost:3000,http://frontend` | Allowed origins |
 | `HF_REPO_ID` | `KuongB/glm-ocr-vietnamese` | Model reference |
 | `MAX_IMAGE_SIZE` | `10485760` (10 MB) | Upload size limit |
-| `MODAL_API_URL` | *(required)* | Modal endpoint URL |
-| `MODAL_TOKEN` | *(optional)* | Modal auth token |
+| `MODAL_API_URL` | *(required)* | Modal endpoint URL — read from the root `.env` |
+| `MODAL_TOKEN` | *(optional)* | Modal auth token — read from the root `.env` |
 | `MODAL_TIMEOUT` | `60` | Request timeout (seconds) |
 | `MODAL_MAX_RETRIES` | `3` | Retry attempts |
 
@@ -482,13 +489,84 @@ IntroML-OCR/
 │       └── label.json           # Ground-truth text labels
 │
 ├── serve.py                     # Modal deployment script (GPU inference)
-├── test-api-glm.py              # Quick API test script
+├── test-api-glm.py              # Modal endpoint smoke test
 ├── docker-compose.yml           # Multi-service orchestration
-├── modal_guide.md               # Modal deployment guide
-├── QUICKSTART.md                # Quick start instructions
-├── CHANGELOG_BACKEND.md         # Backend simplification changelog
+├── .env.example                 # Root env template (MODAL_API_URL for Docker)
+├── .gitignore
 └── README.md                    # This file
 ```
+
+---
+
+## Dataset & Notebooks
+
+The model was fine-tuned on a mix of the team's own handwriting samples and the
+**UIT-HWDB** Vietnamese handwriting dataset (word, line, and paragraph splits).
+
+| Notebook | Purpose |
+|---|---|
+| [`notebook/EDA.ipynb`](notebook/EDA.ipynb) | Exploratory analysis — label statistics, Vietnamese character and diacritic distributions, image properties, data-quality checks |
+| [`notebook/Preprocessing.ipynb`](notebook/Preprocessing.ipynb) | Cleans the UIT archives (drops folders with mismatched image/label pairs), explores the merged corpus, and assembles the final `Data/` folder (≈1000 train images in 50-image subfolders + 15 test samples) |
+
+Both notebooks are written for **Google Colab** and expect the team's dataset to
+be mounted from Google Drive. Paths such as
+`/content/drive/MyDrive/IntroToML - OCR/...` need to be adjusted to your own
+Drive layout.
+
+`data_sample/1/` holds 10 sample images with ground-truth text in `label.json`,
+in the same format the notebooks produce — useful for a quick end-to-end check
+without mounting Drive.
+
+---
+
+## Modal Operations
+
+### Cold Starts
+
+The first request after a deploy, or after the container has been idle, takes
+roughly **20–30 s** while the model is downloaded from HuggingFace and loaded
+onto the GPU. Subsequent requests take about **2–5 s**. The backend's retry
+logic (1 s → 2 s → 4 s back-off) is there to absorb this transparently.
+
+The container shuts down automatically after a few minutes of inactivity, so the
+next request pays the cold start again.
+
+### Development vs Production
+
+```bash
+# Development — ephemeral endpoint, live-reloads on file changes
+modal serve serve.py
+
+# Production — persistent endpoint
+modal deploy serve.py
+```
+
+`modal serve` prints a temporary `...-dev.modal.run` URL; `modal deploy` prints
+the stable one. Re-running `modal deploy` after editing `serve.py` updates the
+deployment with no downtime.
+
+### Smoke Test
+
+```bash
+python test-api-glm.py data_sample/1/1.jpg
+```
+
+The endpoint URL defaults to the development endpoint and can be overridden with
+a second argument or the `MODAL_API_URL` environment variable.
+
+### Monitoring
+
+Logs, metrics, and GPU usage are available at
+[modal.com/apps](https://modal.com/apps).
+
+### Troubleshooting
+
+| Error | Fix |
+|---|---|
+| `Secret not found` | Run `modal secret list`, then `modal secret create huggingface-token HF_TOKEN=<your-token>` |
+| `Model not found` | Check `HF_REPO_ID` in `serve.py` and that your HuggingFace token can read that repo |
+| `GPU quota exceeded` | Wait for the quota to reset or upgrade the Modal plan |
+| Backend returns `500` on every request | `MODAL_API_URL` is unset or wrong — check `backend/.env` |
 
 ---
 
