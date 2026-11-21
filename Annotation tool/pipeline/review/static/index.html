@@ -6,16 +6,19 @@
 <title>Annotation review</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #16233c;
-    --panel-2: #1d2d4a;
-    --line: #2b3b5c;
-    --text: #e6edf7;
-    --muted: #93a4c2;
-    --accent: #38bdf8;
-    --ok: #34d399;
-    --bad: #f87171;
-    --warn: #fbbf24;
+    --bg: #fdf3ef;         /* warm blush page */
+    --panel: #ffffff;
+    --panel-2: #fcefe8;    /* soft terracotta tint */
+    --line: #f0d6cb;
+    --text: #432723;       /* deep warm brown */
+    /* The shades below are tuned to clear WCAG AA (4.5:1) for small text on
+       both --panel and the warmer --bg, which a lighter rose/clay does not. */
+    --muted: #86594d;
+    --accent: #ae523d;     /* light reddish brown */
+    --ok: #c04a69;         /* rose - approve */
+    --bad: #b04a3a;        /* brick - reject */
+    --warn: #946018;
+    --shadow: 0 1px 2px rgba(104, 58, 46, .05), 0 6px 18px rgba(104, 58, 46, .06);
   }
   * { box-sizing: border-box; }
   body {
@@ -30,6 +33,7 @@
     background: var(--panel);
     border-bottom: 1px solid var(--line);
     position: sticky; top: 0; z-index: 5;
+    box-shadow: var(--shadow);
   }
   header h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .02em; }
   .counts { margin-left: auto; display: flex; gap: 14px; font-size: 13px; color: var(--muted); }
@@ -47,6 +51,7 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     overflow: hidden;
+    box-shadow: var(--shadow);
   }
   .card h2 {
     margin: 0; padding: 10px 14px;
@@ -58,7 +63,10 @@
   .card .body { padding: 14px; }
   #imgwrap {
     display: flex; align-items: center; justify-content: center;
-    background: #fff; min-height: 220px; padding: 10px;
+    /* Neutral, slightly cool backdrop so the warm page tint does not shift
+       how the handwriting ink reads. */
+    background: #fbfbfc; min-height: 220px; padding: 10px;
+    border-bottom: 1px solid var(--line);
   }
   #img { max-width: 100%; max-height: 62vh; object-fit: contain; }
   pre.text {
@@ -80,16 +88,17 @@
   textarea {
     width: 100%; min-height: 150px; resize: vertical;
     padding: 12px;
-    background: var(--panel-2); color: var(--text);
+    background: var(--panel); color: var(--text);
     border: 1px solid var(--line); border-radius: 8px;
     font: 15px/1.6 ui-monospace, "Cascadia Code", Consolas, monospace;
   }
   textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   input[type=text] {
     width: 100%; padding: 9px 12px;
-    background: var(--panel-2); color: var(--text);
+    background: var(--panel); color: var(--text);
     border: 1px solid var(--line); border-radius: 8px;
   }
+  input[type=text]::placeholder { color: var(--muted); opacity: .8; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
   button {
     font: inherit; font-weight: 600;
@@ -97,10 +106,18 @@
     border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
     cursor: pointer;
   }
-  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   button:disabled { opacity: .5; cursor: not-allowed; }
-  button.ok { background: var(--ok); border-color: var(--ok); color: #05281c; }
-  button.bad { background: var(--bad); border-color: var(--bad); color: #330d0d; }
+  /* Approve is the primary action (filled); reject is outlined, so the two are
+     told apart by shape as well as hue -- they sit next to each other and get
+     hit at speed. */
+  button.ok {
+    background: var(--ok); border-color: var(--ok); color: #fff;
+    box-shadow: var(--shadow);
+  }
+  button.ok:hover:not(:disabled) { background: #a93f5b; border-color: #a93f5b; color: #fff; }
+  button.bad { background: var(--panel); border-color: var(--bad); color: var(--bad); }
+  button.bad:hover:not(:disabled) { background: var(--bad); border-color: var(--bad); color: #fff; }
   kbd {
     font: 11px ui-monospace, monospace; padding: 1px 5px;
     border: 1px solid currentColor; border-radius: 4px; opacity: .75;
@@ -117,6 +134,7 @@
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
     padding: 10px 18px; border-radius: 8px;
     background: var(--panel); border: 1px solid var(--line);
+    box-shadow: var(--shadow);
     font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .18s;
   }
   #toast.show { opacity: 1; }
@@ -242,7 +260,10 @@ function render(record) {
     pill.textContent = 'SLM left it unchanged';
     pill.className = 'pill same';
   }
-  $('final').focus();
+  // Focus without scrolling, then pin the view to the top: on a long record
+  // the browser would otherwise jump to the textarea and hide the image.
+  $('final').focus({ preventScroll: true });
+  window.scrollTo({ top: 0 });
 }
 
 async function refreshStats() {
