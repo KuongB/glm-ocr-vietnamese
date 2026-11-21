@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     build:
@@ -12,12 +14,7 @@ services:
       - CORS_ORIGINS=http://localhost:3000,http://frontend
       - HF_REPO_ID=KuongB/glm-ocr-vietnamese
       - MAX_IMAGE_SIZE=10485760
-      # Required: the Modal endpoint URL produced by `modal deploy serve.py`.
-      # Set it in a .env file next to this compose file, or export it first.
-      - MODAL_API_URL=${MODAL_API_URL:?set MODAL_API_URL to your Modal endpoint URL}
-      - MODAL_TOKEN=${MODAL_TOKEN:-}
-      - MODAL_TIMEOUT=60
-      - MODAL_MAX_RETRIES=3
+      - USE_LOCAL_MODEL=False
     volumes:
       - ./backend:/app
     networks:
@@ -46,3 +43,6 @@ services:
 networks:
   ocr-network:
     driver: bridge
+
+volumes:
+  backend_data:

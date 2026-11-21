@@ -76,12 +76,10 @@ cp .env.example .env
 
 **Important**: You must set `MODAL_API_URL` in `.env` file.
 
-Get your Modal API URL by deploying the model from the project root:
+Get your Modal API URL by deploying the model:
 ```bash
-modal deploy serve.py
+modal serve serve.py
 ```
-
-Use `modal serve serve.py` instead for a temporary development endpoint.
 
 ### 4. Run the server
 

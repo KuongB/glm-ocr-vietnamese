@@ -1,0 +1,1 @@
+Model repo: https://huggingface.co/KuongB/glm-ocr-vietnamese
